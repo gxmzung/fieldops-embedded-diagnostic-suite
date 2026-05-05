@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FieldOps Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background:#0f172a;
+      color:#e5e7eb;
+      margin:0;
+      padding:24px;
+    }
+    h1 { margin-bottom:4px; }
+    .sub { color:#94a3b8; margin-bottom:24px; }
+
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+      margin-bottom:24px;
+    }
+
+    .card {
+      background:#1e293b;
+      padding:18px;
+      border-radius:14px;
+      box-shadow:0 4px 12px rgba(0,0,0,.25);
+    }
+
+    .label {
+      color:#94a3b8;
+      font-size:13px;
+    }
+
+    .value {
+      font-size:28px;
+      font-weight:bold;
+      margin-top:8px;
+    }
+
+    .normal { color:#22c55e; }
+    .warn { color:#facc15; }
+    .critical { color:#ef4444; }
+
+    .chart-box {
+      background:#1e293b;
+      padding:18px;
+      border-radius:14px;
+      margin-bottom:24px;
+      box-shadow:0 4px 12px rgba(0,0,0,.25);
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      background:#1e293b;
+      border-radius:14px;
+      overflow:hidden;
+    }
+
+    th, td {
+      padding:10px;
+      border-bottom:1px solid #334155;
+      font-size:14px;
+    }
+
+    th {
+      text-align:left;
+      color:#cbd5e1;
+      background:#273449;
+    }
+  </style>
+</head>
+<body>
+  <h1>FieldOps Embedded Diagnostic Dashboard</h1>
+  <div class="sub">FDU-01 telemetry monitoring / fault visualization</div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="label">Device</div>
+      <div class="value" id="device">-</div>
+    </div>
+    <div class="card">
+      <div class="label">Temperature</div>
+      <div class="value" id="temp">-</div>
+    </div>
+    <div class="card">
+      <div class="label">Voltage</div>
+      <div class="value" id="volt">-</div>
+    </div>
+    <div class="card">
+      <div class="label">Health</div>
+      <div class="value" id="health">-</div>
+    </div>
+  </div>
+
+  <div class="chart-box">
+    <h2>Temperature / Voltage Trend</h2>
+    <canvas id="telemetryChart" height="90"></canvas>
+  </div>
+
+  <h2>Telemetry Event Log</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Device</th>
+        <th>Temp</th>
+        <th>Voltage</th>
+        <th>GPS</th>
+        <th>Health</th>
+        <th>Message</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+<script>
+let chart;
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+  if (lines.length < 2) return [];
+
+  const headers = lines[0]
+    .replace(/^\uFEFF/, "")
+    .split(",")
+    .map(h => h.trim());
+
+  return lines.slice(1).map(line => {
+    const cols = line.split(",").map(c => c.trim());
+    const obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = cols[i] ?? "";
+    });
+    return obj;
+  });
+}
+
+function healthClass(health) {
+  if (health === "NORMAL") return "normal";
+  if (health === "WARN") return "warn";
+  return "critical";
+}
+
+async function loadCSV() {
+  try {
+    const res = await fetch("/data/telemetry_events.csv?ts=" + Date.now());
+    const text = await res.text();
+    const data = parseCSV(text);
+
+    if (!data.length) return;
+
+    const last = data[data.length - 1];
+
+    document.getElementById("device").textContent = last.device_id || "-";
+    document.getElementById("temp").textContent = (last.temperature_c || "-") + " °C";
+    document.getElementById("volt").textContent = (last.voltage_v || "-") + " V";
+
+    const healthEl = document.getElementById("health");
+    healthEl.textContent = last.health || "-";
+    healthEl.className = "value " + healthClass(last.health);
+
+    const recent = data.slice(-30);
+
+    document.getElementById("rows").innerHTML = recent.slice().reverse().map(r => `
+      <tr>
+        <td>${r.timestamp || "-"}</td>
+        <td>${r.device_id || "-"}</td>
+        <td>${r.temperature_c || "-"}</td>
+        <td>${r.voltage_v || "-"}</td>
+        <td>${r.gps_fix || "-"}</td>
+        <td class="${healthClass(r.health)}">${r.health || "-"}</td>
+        <td>${r.message || "-"}</td>
+      </tr>
+    `).join("");
+
+    updateChart(recent);
+  } catch (err) {
+    console.error("CSV load failed:", err);
+  }
+}
+
+function updateChart(data) {
+  const labels = data.map((r, i) => {
+    if (!r.timestamp) return String(i + 1);
+    return r.timestamp.split("T")[1]?.slice(0, 8) || String(i + 1);
+  });
+
+  const temperatures = data.map(r => Number(r.temperature_c));
+  const voltages = data.map(r => Number(r.voltage_v));
+
+  if (!chart) {
+    const ctx = document.getElementById("telemetryChart");
+
+    chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Temperature (°C)",
+            data: temperatures,
+            borderWidth: 2,
+            tension: 0.3
+          },
+          {
+            label: "Voltage (V)",
+            data: voltages,
+            borderWidth: 2,
+            tension: 0.3,
+            yAxisID: "y1"
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: {
+          mode: "index",
+          intersect: false
+        },
+        scales: {
+          y: {
+            title: { display: true, text: "Temperature °C" }
+          },
+          y1: {
+            position: "right",
+            title: { display: true, text: "Voltage V" },
+            grid: { drawOnChartArea: false }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { color: "#e5e7eb" }
+          }
+        }
+      }
+    });
+  } else {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = temperatures;
+    chart.data.datasets[1].data = voltages;
+    chart.update();
+  }
+}
+
+loadCSV();
+setInterval(loadCSV, 2000);
+</script>
+</body>
+</html>
