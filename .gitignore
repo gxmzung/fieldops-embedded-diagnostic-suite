@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.o
+scheduler_demo
+data/*.csv
+data/*.txt
+05_equipment_log_analyzer/reports/*.md
