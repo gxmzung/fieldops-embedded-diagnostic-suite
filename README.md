@@ -1,189 +1,167 @@
 # FieldOps Embedded Diagnostic Suite
 
-임베디드 장비 **FDU-01**을 가정하고  
-**센서 데이터 수집 → 통신 → 관제 → 로그 분석 → 웹 시각화**까지 구현한 프로젝트입니다.
+Embedded diagnostic pipeline portfolio project designed to simulate how field equipment telemetry can be collected, transmitted, monitored, and analyzed.
+
+This project focuses on telemetry ingestion, UART-style parsing, UDP transmission, monitoring workflows, and fault analysis for operational environments.
 
 ---
 
-## 🔧 System Overview
+## Key Technologies
 
-```txt
-[Sensor UART]
-    ↓
-[Serial Gateway]
-    ↓
-[Telemetry UDP]
-    ↓
-[Monitoring Server]
-    ↓
-[CSV Logging]
-    ↓
-[Web Dashboard]
-    ↓
-[Fault Analysis Report]
+`C` `Python` `UDP` `UART`
+`Telemetry` `Monitoring`
+`Diagnostics` `Logging`
+
+---
+
+## Architecture
+
+```text
+[Embedded Device Simulator]
+    sensor data generation
+        ↓
+[UART-style Parser]
+    packet parsing / validation
+        ↓
+[UDP Telemetry Sender]
+    operational telemetry transmission
+        ↓
+[Monitoring / Logging Layer]
+    CSV logs / event records
+        ↓
+[Dashboard / Analysis Tools]
+    fault analysis / monitoring view
 ```
 
 ---
 
-## 🧠 Architecture
+## Why This Project Exists
 
-### 01_serial_sensor_gateway
-- UART 데이터 파싱
-- 센서 상태 분류: `NORMAL`, `WARN`, `CRITICAL`
+This project was built to study how embedded field devices can interact with operational monitoring systems.
 
-### 02_gnss_position_tracker
-- NMEA 데이터 파싱
-- 위치 추적 및 거리 계산
+The focus areas include:
 
-### 03_field_telemetry_monitor
-- UDP 기반 관제 서버
-- 온도, 전압, GPS 상태 기반 이상 감지
-
-### 04_embedded_task_scheduler
-- C 기반 주기적 태스크 실행
-- 센서 읽기, 전송, 헬스체크, 로그 저장 흐름 구현
-
-### 05_equipment_log_analyzer
-- 장애 로그 분석
-- Fault Report 생성
-
-### 06_web_dashboard
-- Chart.js 기반 실시간 데이터 시각화
-- 장비 상태 대시보드
+- telemetry generation
+- UART-style communication flow
+- UDP telemetry delivery
+- operational logging
+- fault-event analysis
+- monitoring-oriented system design
 
 ---
 
-## 📊 Web Dashboard
+## Engineering-Oriented Features
 
-### Run
+This project includes:
 
-```bash
-python3 06_web_dashboard/dashboard.py
-```
-
-Open:
-
-```txt
-http://127.0.0.1:8080/06_web_dashboard/
-```
-
-### Features
-
-- 실시간 온도 / 전압 그래프
-- 장비 상태 표시: `NORMAL`, `WARN`, `CRITICAL`
-- GPS 상태 감지: `fix lost`
-- 이벤트 로그 테이블
+- simulated embedded telemetry generation
+- UART-style packet parsing
+- UDP telemetry transmission
+- structured logging
+- operational fault records
+- CSV export workflow
+- monitoring-oriented architecture
+- separation between telemetry and analysis layer
 
 ---
 
-## ⚠️ Fault Scenarios
+## Project Goals
 
-| Condition | Status |
+The goal is not to build a production-certified industrial platform.
+
+Instead, this project focuses on understanding:
+
+- how field telemetry flows through systems
+- how monitoring pipelines are structured
+- how fault events can be logged and analyzed
+- how embedded-style communication integrates with operational tooling
+
+---
+
+## Key Documents
+
+| Document | Purpose |
 |---|---|
-| Temperature > 85°C | `CRITICAL temperature` |
-| Voltage < 10V | `CRITICAL battery` |
-| GPS fix false | `CRITICAL gps lost` |
+| `docs/PROJECT_OVERVIEW.md` | High-level system overview |
+| `docs/RUNBOOK.md` | Basic run and verification flow |
+| `docs/LIMITATIONS.md` | Current limitations and future improvements |
 
 ---
 
-## 📁 Example Output
+## Sample Operational Log
 
-### Telemetry CSV
-
-```csv
-device_id,timestamp,temperature_c,voltage_v,gps_fix,health,message
-FDU01,2026-05-05T08:13:28,44.44,11.23,True,NORMAL,nominal
-FDU01,2026-05-05T08:13:27,49.48,11.32,False,CRITICAL,gps fix lost
+```text
+[INFO] Device connected
+[INFO] Telemetry stream active
+[WARN] Temperature threshold exceeded
+[ERROR] Sensor timeout detected
+[INFO] Recovery completed
 ```
 
-### Fault Report
+---
+
+## Example Workflow
+
+```text
+1. Device generates telemetry
+2. Parser validates incoming data
+3. UDP layer forwards telemetry
+4. Monitoring layer records events
+5. Fault analysis reviews abnormal behavior
+```
+
+---
+
+## Screenshots
+
+> Add real screenshots after local verification.
+
+Recommended files:
+
+```text
+assets/screenshots/dashboard.png
+assets/screenshots/log-view.png
+assets/screenshots/fault-analysis.png
+```
+
+Example usage after screenshots are added:
 
 ```md
-Total events: 80
-Detected faults: 14
+![Dashboard](assets/screenshots/dashboard.png)
 
-- temperature critical
-- battery critical
-- gps fix lost
+![Log View](assets/screenshots/log-view.png)
+
+![Fault Analysis](assets/screenshots/fault-analysis.png)
 ```
 
 ---
 
-## 🚀 How to Run
+## Honest Limits
 
-### 1. Generate Sample Data
+This project does **not** claim:
 
-```bash
-python3 scripts/generate_sample_data.py
-```
+- production-grade industrial certification
+- real hardware deployment
+- secure telemetry infrastructure
+- formal real-time guarantees
+- hardware-in-the-loop testing
 
-### 2. Serial Sensor Gateway
-
-```bash
-python3 01_serial_sensor_gateway/gateway.py --input data/sensor_uart.txt --output data/sensor_log.csv
-```
-
-### 3. GNSS Position Tracker
-
-```bash
-python3 02_gnss_position_tracker/tracker.py --input data/sample_nmea.txt --output data/position_log.csv
-```
-
-### 4. Equipment Log Analyzer
-
-```bash
-python3 05_equipment_log_analyzer/analyzer.py --input data/equipment_events.csv --report 05_equipment_log_analyzer/reports/fault_report.md
-```
-
-### 5. Telemetry Monitor
-
-Terminal 1:
-
-```bash
-python3 03_field_telemetry_monitor/telemetry_server.py --host 127.0.0.1 --port 9000 --output data/telemetry_events.csv
-```
-
-Terminal 2:
-
-```bash
-python3 simulator/fdu_device_simulator.py --udp-host 127.0.0.1 --udp-port 9000 --count 30
-```
-
-### 6. Embedded Task Scheduler
-
-```bash
-cd 04_embedded_task_scheduler
-make
-./scheduler_demo
-cd ..
-```
-
-### 7. Web Dashboard
-
-```bash
-python3 06_web_dashboard/dashboard.py
-```
+This is a portfolio and learning-oriented project focused on telemetry flow, monitoring structure, and operational diagnostics.
 
 ---
 
-## 🎯 Purpose
+## Future Improvements
 
-이 프로젝트는 단순 앱 개발이 아니라,  
-**현장 장비 운용 흐름을 이해하기 위한 임베디드 / 관제 시스템 설계**를 목표로 했습니다.
-
----
-
-## 🧩 Key Points
-
-- UART / UDP 기반 데이터 흐름 구현
-- 센서 이상 탐지 로직 구현
-- GNSS 위치 추적 및 거리 계산
-- 실시간 관제 시스템 구조 구현
-- C 기반 태스크 스케줄링 구현
-- 데이터 수집부터 웹 시각화까지 End-to-End 구현
+- Connect real MCU or sensor hardware
+- Add packet integrity verification
+- Add replay and load-test tooling
+- Add dashboard screenshots and execution GIFs
+- Add automated integration tests
+- Add persistent database storage
+- Add fault classification logic
 
 ---
 
-## 📌 Summary
+## Interview Summary
 
-> 임베디드 장비 데이터를 수집하고, 이상 상태를 감지하며, 관제 시스템으로 시각화하는 전체 흐름을 구현한 프로젝트입니다.
+> This project was built to study how telemetry and monitoring systems can be structured around embedded-style operational workflows: telemetry generation, parsing, UDP delivery, logging, and fault analysis.
