@@ -5,3 +5,6 @@ scheduler_demo
 data/*.csv
 data/*.txt
 05_equipment_log_analyzer/reports/*.md
+
+# macOS
+.DS_Store
