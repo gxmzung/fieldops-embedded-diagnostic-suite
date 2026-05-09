@@ -114,25 +114,19 @@ Instead, this project focuses on understanding:
 
 ## Screenshots
 
-> Add real screenshots after local verification.
+### Monitoring Dashboard
 
-Recommended files:
+![Monitoring Dashboard](assets/screenshots/dashboard1.png)
 
-```text
-assets/screenshots/dashboard.png
-assets/screenshots/log-view.png
-assets/screenshots/fault-analysis.png
-```
+![Telemetry Event Log](assets/screenshots/dashboard2.png)
 
-Example usage after screenshots are added:
+### Fault Analysis Report
 
-```md
-![Dashboard](assets/screenshots/dashboard.png)
+![Fault Analysis Report](assets/screenshots/fault-analysis.png)
 
-![Log View](assets/screenshots/log-view.png)
+### Raw Equipment Log
 
-![Fault Analysis](assets/screenshots/fault-analysis.png)
-```
+![Raw Equipment Log](assets/screenshots/log-view.png)
 
 ---
 
