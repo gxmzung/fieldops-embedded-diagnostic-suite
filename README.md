@@ -14,6 +14,51 @@ This project focuses on telemetry ingestion, UART-style parsing, UDP transmissio
 
 ---
 
+## Quick Start
+
+```bash
+pip install -r requirements.txt
+
+python3 scripts/generate_sample_data.py
+
+python3 06_web_dashboard/dashboard.py
+```
+
+Open:
+
+```text
+http://localhost:8000
+```
+
+---
+
+## Repository Structure
+
+```text
+01_serial_sensor_gateway/      UART-style parsing and gateway
+02_gnss_position_tracker/      GNSS telemetry parsing
+03_field_telemetry_monitor/    Telemetry monitoring pipeline
+04_embedded_task_scheduler/    Embedded scheduler example in C
+05_equipment_log_analyzer/     Fault-event analysis tooling
+06_web_dashboard/              Monitoring dashboard
+docs/                          System and interview documents
+data/                          Sample telemetry datasets
+```
+
+---
+
+## Runtime Example
+
+```bash
+python3 06_web_dashboard/dashboard.py
+```
+
+```bash
+python3 05_equipment_log_analyzer/analyzer.py \
+  --input data/equipment_events.csv \
+  --report report.txt
+```
+---
 ## Architecture
 
 ```text
