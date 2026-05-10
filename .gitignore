@@ -1,10 +1,15 @@
+node_modules/
+.venv/
+venv/
+build/
+target/
+obj/
 __pycache__/
-*.pyc
-*.o
-scheduler_demo
-data/*.csv
-data/*.txt
-05_equipment_log_analyzer/reports/*.md
-
-# macOS
+.pytest_cache/
+.dart_tool/
+.idea/
+*.sqlite
+*.db
+*.log
+.env
 .DS_Store
