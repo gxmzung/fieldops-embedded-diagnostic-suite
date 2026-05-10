@@ -194,7 +194,7 @@ This is a portfolio and learning-oriented project focused on telemetry flow, mon
 - Connect real MCU or sensor hardware
 - Add packet integrity verification
 - Add replay and load-test tooling
-- Add dashboard screenshots and execution GIFs
+- Add execution GIFs and hardware-in-the-loop demo captures
 - Add automated integration tests
 - Add persistent database storage
 - Add fault classification logic
