@@ -1,3 +1,32 @@
+﻿<!-- PORTFOLIO-HEADER:START -->
+
+# fieldops-embedded-diagnostic-suite
+
+> Embedded field-telemetry diagnostic pipeline with UART parsing, GNSS, UDP, logging, fault analysis, and monitoring.
+
+**Domain:** Embedded Systems · Field Telemetry · Diagnostics  
+**Role:** Embedded / Telemetry Pipeline Development  
+**Status:** Engineering Portfolio / Simulation
+
+## Portfolio Summary
+
+### System Focus
+
+- UART-style packet parsing
+- GNSS / positioning telemetry
+- UDP telemetry transport
+- structured operational logging
+- fault-event analysis
+- monitoring dashboard integration
+
+### Engineering Boundary
+
+> This repository models field-equipment telemetry and diagnostics. Simulated device data and software behavior are not equivalent to industrial hardware acceptance testing.
+
+---
+
+<!-- PORTFOLIO-HEADER:END -->
+
 # FieldOps Embedded Diagnostic Suite
 
 Embedded diagnostic pipeline portfolio project designed to simulate how field equipment telemetry can be collected, transmitted, monitored, and analyzed.
@@ -204,3 +233,4 @@ This is a portfolio and learning-oriented project focused on telemetry flow, mon
 ## Interview Summary
 
 > This project was built to study how telemetry and monitoring systems can be structured around embedded-style operational workflows: telemetry generation, parsing, UDP delivery, logging, and fault analysis.
+
