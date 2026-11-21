@@ -13,3 +13,6 @@ __pycache__/
 *.log
 .env
 .DS_Store
+
+# Local diagnostic artifacts
+out/
