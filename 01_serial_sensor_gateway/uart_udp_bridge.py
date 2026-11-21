@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "03_field_telemetry_monitor"))
-from parser import parse_sensor_line, SensorParseError
+from parser import LineFramer, parse_sensor_line, SensorParseError
 from health_checker import validate_telemetry
 
 STOP = False
@@ -28,7 +28,8 @@ def _stop(*_args):
 
 def bridge(device: str, host: str = "127.0.0.1", port: int = 9000,
            baud: int = 115200, gps_fix: bool = False,
-           max_frames: int = None, idle_limit: float = None) -> int:
+           max_frames: int = None, idle_limit: float = None,
+           require_crc: bool = False) -> int:
     """Read newline-delimited FDU records and send validated UDP JSON.
 
     The requested baud rate is configured for serial devices using termios.
@@ -47,7 +48,8 @@ def bridge(device: str, host: str = "127.0.0.1", port: int = 9000,
               115200: termios.B115200}
     fd = os.open(device, os.O_RDONLY | os.O_NOCTTY | os.O_NONBLOCK)
     sent = 0
-    buf = bytearray()
+    framer = LineFramer(max_bytes=512)
+    sequences = {}
     last_input = time.monotonic()
     try:
         tty.setraw(fd)
@@ -76,35 +78,34 @@ def bridge(device: str, host: str = "127.0.0.1", port: int = 9000,
                     print("[UART] EOF", flush=True)
                     break
                 last_input = time.monotonic()
-                buf.extend(chunk)
-                if len(buf) > 8192:
-                    print("[REJECTED] UART input buffer overflow", flush=True)
-                    buf.clear()
-                while b"\n" in buf:
-                    raw, _, remainder = buf.partition(b"\n")
-                    buf = bytearray(remainder)
+                for raw, framing_error in framer.feed(chunk):
+                    if framing_error is not None:
+                        print(f"[REJECTED] {framing_error}", flush=True)
+                        continue
                     try:
                         line = raw.decode("ascii").strip()
-                        record = parse_sensor_line(line)
+                        record = parse_sensor_line(line, require_crc=require_crc)
+                        sequence = sequences.get(record.device_id, 0)
                         payload = {
                             "protocol_version": 1,
-                            "sequence_number": sent,
+                            "sequence_number": sequence,
                             "device_id": record.device_id,
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                             "temperature_c": record.temperature_c,
                             "voltage_v": record.voltage_v,
                             "current_a": record.current_a,
-                            # UART source has no GNSS field. Default False is conservative.
-                            # --assume-gps-fix is only for explicitly simulated demos.
                             "gps_fix": gps_fix,
                         }
                         validate_telemetry(payload)
                     except (SensorParseError, UnicodeError, ValueError) as exc:
                         print(f"[REJECTED] UART record: {exc}", flush=True)
                         continue
-                    sock.sendto(json.dumps(payload).encode("utf-8"), (host, port))
+                    sock.sendto(json.dumps(payload, allow_nan=False).encode("utf-8"),
+                                (host, port))
+                    sequences[record.device_id] = (sequence + 1) % (2 ** 32)
                     sent += 1
-                    print(f"[UART->UDP] device={record.device_id} seq={sent-1}", flush=True)
+                    print(f"[UART->UDP] device={record.device_id} seq={sequence}",
+                          flush=True)
                     if max_frames is not None and sent >= max_frames:
                         return sent
     finally:
@@ -120,6 +121,8 @@ def main():
     parser.add_argument("--port", type=int, default=9000)
     parser.add_argument("--max-frames", type=int)
     parser.add_argument("--idle-limit", type=float)
+    parser.add_argument("--require-crc", action="store_true",
+                        help="Reject legacy UART frames without CRC32")
     parser.add_argument("--assume-gps-fix", action="store_true",
                         help="Synthetic flag ONLY; not proof of GNSS fix")
     args = parser.parse_args()
@@ -127,7 +130,8 @@ def main():
     signal.signal(signal.SIGINT, _stop)
     try:
         bridge(args.device, args.host, args.port, args.baud,
-               args.assume_gps_fix, args.max_frames, args.idle_limit)
+               args.assume_gps_fix, args.max_frames, args.idle_limit,
+               args.require_crc)
     except (OSError, ValueError) as exc:
         parser.exit(1, f"UART bridge error: {exc}\n")
 
