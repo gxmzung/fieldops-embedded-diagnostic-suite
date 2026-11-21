@@ -45,6 +45,9 @@ This project focuses on telemetry ingestion, UART-style parsing, UDP transmissio
 
 ## Quick Start
 
+The project remains a simulation-oriented engineering toolkit. For Phase 1 transport diagnostics, see [Telemetry Reliability](docs/PHASE1_TELEMETRY_RELIABILITY.md).
+
+
 ```bash
 pip install -r requirements.txt
 
@@ -56,7 +59,7 @@ python3 06_web_dashboard/dashboard.py
 Open:
 
 ```text
-http://localhost:8000
+http://127.0.0.1:8080/06_web_dashboard/
 ```
 
 ---
